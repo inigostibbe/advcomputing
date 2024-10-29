@@ -2,10 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time 
 from numba import jit
+# test
 
 start_time = time.time()
 
-# Parameters
+# Parameter
 L = 128           # Lattice size LxL
 T = 1             # Temperature
 J = 1.0                 # Coupling constant (J > 0 for ferromagnetic interaction)
@@ -78,7 +79,7 @@ for step in range(steps):
 
 end_time = time.time()
 elapsed_time = end_time - start_time  # Calculate the elapsed time
-print(f"Elapsed time: {elapsed_time:.2f} seconds")
+print(f"Lattice points: {L*L}, Steps: {steps}, Elapsed time: {elapsed_time:.2f} seconds")
 
 # Plot the results
 plt.plot(energies, label="Energy")
@@ -96,8 +97,6 @@ def plot_lattice(lattice, title):
 
     plt.gca().set_xticks([])
     plt.gca().set_yticks([])
-
-print(len(lattice_histories))
 
 # Code to plot a gradient time series of lattice progression
 def gradplot(total_columns, plots):
