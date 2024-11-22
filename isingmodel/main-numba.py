@@ -8,9 +8,9 @@ start_time = time.time()
 
 # Parameter
 L = 128           # Lattice size LxL
-T = 1             # Temperature
-J = 1.0                 # Coupling constant (J > 0 for ferromagnetic interaction)
-steps = 256            # Number of Monte Carlo steps
+T = 5         # Temperature - critical temperature is around 2.269
+J = 1                 # Coupling constant (J > 0 for ferromagnetic interaction)
+steps = 512            # Number of Monte Carlo steps
 k_B = 1      # Boltzmann constant
 H = 0              # External magnetic field
 np.random.seed(42) # Set seed for reproducibility
@@ -70,7 +70,7 @@ for step in range(steps):
     monte_carlo_step(lattice, T)
     
     energy = calc_energy(lattice)
-    magnetization = np.sum(lattice)
+    magnetization = np.sum(lattice)/(L*L)
     energies.append(energy)
     magnetizations.append(magnetization)
 
@@ -82,11 +82,69 @@ elapsed_time = end_time - start_time  # Calculate the elapsed time
 print(f"Lattice points: {L*L}, Steps: {steps}, Elapsed time: {elapsed_time:.2f} seconds")
 
 # Plot the results
-plt.plot(energies, label="Energy")
-plt.plot(magnetizations, label="Magnetization")
-plt.xlabel("Monte Carlo step")
-plt.legend()
+# plt.plot(energies, label="Energy")
+# plt.xlabel("Monte Carlo step")
+# plt.legend()
+# plt.show()
+
+count=0
+# Plot the magnetisations
+# for i in range(16):
+#     magnetizations = []
+#     lattice = initialise_lattice(L)
+#     for step in range(steps):
+#         monte_carlo_step(lattice, T)
+#         magnetization = np.sum(lattice)/(L*L)
+#         magnetizations.append(magnetization)
+#         magnetizations_current = magnetizations
+#     if magnetization > 0:
+#         count += 1
+#     plt.plot(range(steps), magnetizations_current, label="Magnetization")
+
+# # plot a line at y = 0
+# print(count)
+# plt.axhline(y=0, color='black', linestyle='--', label="y = 0")
+# plt.xlim(0, steps)
+# plt.ylabel("Magnetisation")
+# plt.xlabel("Step")
+# plt.show()
+
+import matplotlib.pyplot as plt
+
+temperatures = [1, 2.269, 5]
+fig, axes = plt.subplots(3, 1, figsize=(10, 15))
+
+for idx, T in enumerate(temperatures):
+    ax = axes[idx]
+    all_magnetizations = []
+    for i in range(16):
+        magnetizations = []
+        lattice = initialise_lattice(L)
+        for step in range(steps):
+            monte_carlo_step(lattice, T)
+            magnetization = np.sum(lattice) / (L * L)
+            magnetizations.append(magnetization)
+        ax.plot(range(steps), magnetizations)
+        all_magnetizations.extend(magnetizations)
+        ax.set_xlim(0, steps)
+        ax.axhline(y=0, color='black', linestyle='--')
+    maxvalue = max(abs(m) for m in all_magnetizations)
+    ax.set_ylim(-maxvalue-0.05, maxvalue+0.05)
+    ax.set_xticks(range(0, steps + 1, 64))
+    if idx == 0:
+        ax.set_title("Magnetisation vs Stepcount for different T's", fontsize=16)
+    if idx == 1:
+        ax.set_ylabel("Magnetisation", fontsize=14)
+    if idx == len(temperatures) - 1:
+        ax.set_xlabel("Stepcount", fontsize=14)
+    else:
+        ax.set_xticklabels([])
+    ax.legend([f"T = {T}"], loc='upper right', fontsize='large')
+
+plt.tight_layout(rect=[0.05, 0, 1, 1])
 plt.show()
+
+exit()
 
 # Function to plot the lattice
 
@@ -101,7 +159,7 @@ def plot_lattice(lattice, title):
 # Code to plot a gradient time series of lattice progression
 def gradplot(total_columns, plots):
 
-    fig, axes = plt.subplots(1, plots+1, figsize=(10, 5), gridspec_kw={'wspace': 0, 'hspace': 0})  # Use gridspec_kw to remove spacing
+    fig, axes = plt.subplots(1, plots+1, figsize=(15, 7), gridspec_kw={'wspace': 0, 'hspace': 0})  # Use gridspec_kw to remove spacing
 
     indiv_columns = total_columns//plots # or total_columns//steps
     start = 0
@@ -118,12 +176,12 @@ def gradplot(total_columns, plots):
         plot_lattice(lattice_histories[step][:, start:stop], step)
 
         # Update start and stop for the next step
-        start = (start + indiv_columns) % 128  # Wrap around after 128 columns
-        stop = (start + indiv_columns - 1) % 128  # Ensure stop stays within bounds
+        start = (start + indiv_columns) % L  # Wrap around after 128 columns
+        stop = (start + indiv_columns - 1) % L  # Ensure stop stays within bounds
         step += spp
 
 
-total_columns = 512
+total_columns = 4*L
 plots = 32
 
 gradplot(total_columns, plots)
@@ -131,12 +189,13 @@ plt.tight_layout()
 plt.show()
 
 # Simulate for different temperatures
-# temperatures = np.linspace(1.0, 5.0, 20)
-# magnetizations = []
+temperatures = np.linspace(2, 2.5, 30)
+magnetizations = []
 
 # for T in temperatures:
 #     # Initialize the lattice
-#     lattice = initialise_lattice(L)
+#     print(T)
+#     lattice = initialise_lattice(L) 
     
 #     # Run the simulation
 #     for step in range(steps):
@@ -150,7 +209,35 @@ plt.show()
 # plt.plot(temperatures, magnetizations, '-o')
 # plt.axvline(x=2.269, color='r', linestyle='--', label="Theoretical $T_c$")
 # plt.xlabel("Temperature (T)")
-# plt.ylabel("Magnetization")
-# plt.title("Magnetization vs Temperature")
+# plt.ylabel("Magnetisation")
+# plt.title("Magnetisation vs Temperature")
 # plt.legend()
 # plt.show()
+
+def plot_lattice(lattice, title):
+    plt.imshow(lattice, cmap='gray', interpolation='none', vmin=-1, vmax=1)  
+    plt.title(title)
+    # plt.colorbar(label='Spin')
+
+    plt.gca().set_xticks([])
+    plt.gca().set_yticks([])
+
+# Plot the "before" state
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 4, 1)  # Create subplot for the "before" state
+plot_lattice(lattice_histories[0], 'Initial')
+
+# Plot the "after" state
+plt.subplot(1, 4, 2)  # Create subplot for the "after" state
+plot_lattice(lattice_histories[round(steps/10)], '10% of steps')
+
+# Plot the "after" state
+plt.subplot(1, 4, 3)  # Create subplot for the "after" state
+plot_lattice(lattice_histories[round(steps/2)], '50% of steps')
+
+# Plot the "after" state
+plt.subplot(1, 4, 4)  # Create subplot for the "after" state
+plot_lattice(lattice, 'Final')
+
+plt.show()

@@ -7,10 +7,10 @@ import numba
 numba.set_num_threads(12)  # Set the number of threads
 
 # Parameters
-L = 512  # Lattice size LxL
+L = 128  # Lattice size LxL
 T = 1  # Temperature
 J = 1.0  # Coupling constant (J > 0 for ferromagnetic interaction)
-steps = 1024  # Number of Monte Carlo steps
+steps = 2048  # Number of Monte Carlo steps
 k_B = 1  # Boltzmann constant
 H = 0  # External magnetic field
 np.random.seed(42)  # Set seed for reproducibility
@@ -80,7 +80,7 @@ start_time = time.time()
 for step in range(steps):
     monte_carlo_step(lattice, T, L, J, k_B)
     energy = calc_energy(lattice, L, J, H)
-    magnetization = np.sum(lattice)
+    magnetization = np.sum(lattice)/(L*L)
     energies.append(energy)
     magnetizations.append(magnetization)
     lattice_histories.append(lattice.copy())
@@ -92,7 +92,7 @@ print(f"Lattice points: {L*L}, Steps: {steps}, Elapsed time: {elapsed_time:.2f} 
 
 
 def plot_lattice(lattice, title):
-    plt.imshow(lattice, cmap='gray', interpolation='none', vmin=-1, vmax=1)  # coolwarm for clear distinction
+    plt.imshow(lattice, cmap='gray', interpolation='none', vmin=-1, vmax=1)  
     plt.title(title)
     # plt.colorbar(label='Spin')
 
